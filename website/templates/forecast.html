@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Forecast{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Weather Forecast</h1>
+
+    {% if cities %}
+    <form action="/forecast" method="POST" class="mb-4">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <label for="current_city" class="form-label">Select City:</label>
+                <select id="current_city" name="current_city" class="form-select" required>
+                    {% for city in cities %}
+                            <option value="{{ city['city'] }}">{{ city['city'].capitalize() }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 text-center mt-4">
+                <button type="submit" class="btn btn-primary">Get Forecast</button>
+            </div>
+        </div>
+    </form>
+    {% else %}
+    <p class="text-center">No cities available. Please add cities first.</p>
+    {% endif %}
+    <div class="container mt-5">
+        <h2>Download Data as CSV</h2>
+    
+        <!-- Button for exporting Cities data -->
+        <a href="/export_cities_csv" class="btn btn-primary">Download Cities CSV</a>
+    
+        <!-- Button for exporting WeatherForecast data -->
+        <a href="/export_weather_csv" class="btn btn-primary">Download Weather Forecast CSV</a>
+    </div>
+    {% if last_forecast %}
+    <h2 class="text-center mb-4">Latest Forecast</h2>
+    <table class="table table-bordered table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>City</th>
+                <th>Time</th>
+                <th>Temperature (°C)</th>
+                <th>Precipitation (mm)</th>
+                <th>Wind Speed (m/s)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for forecast in last_forecast %}
+                <tr>
+                    <td>{{ forecast.city.city }}</td>
+                    <td>{{ forecast.date }}</td>
+                    <td>{{ forecast.temperature }}</td>
+                    <td>{{ forecast.precipitation }}</td>
+                    <td>{{ forecast.wind_speed }}</td>
+                </tr>
+            {% endfor %}
+            {% if missing_forecasts %}
+                {% for missing_city in missing_forecasts %}
+                    <tr>
+                        <td colspan="5" class="text-center">
+                            No forecast data available for {{ missing_city }}, get forecast. 
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% endif %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if avg_temperatures %}
+    <h2 class="text-center mb-4">Average Temperature of Last 3 Measurements per Day</h2>
+    <table class="table table-bordered table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>City</th>
+                <th>Date</th>
+                <th>Average Temperature (°C)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for temp in avg_temperatures %}
+                {% set city = all_cities | selectattr('id', 'equalto', temp.city_id) | first %}
+                {% for current_city in cities %}
+                    {% if current_city.city == city.city %}
+                    <tr>
+                        <td>{{ city.city if city else 'Unknown' }}</td>
+                        <td>{{ temp.date }}</td>
+                        <td>{{ temp.average_temperature }}</td>
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if top_temps %}
+    <h2 class="text-center mb-4">Top 5 Highest Temperatures</h2>
+    <table class="table table-bordered table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>City</th>
+                <th>Date</th>
+                <th>Temperature (°C)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for temp in top_temps %}
+                {% set city = all_cities | selectattr('id', 'equalto', temp.city_id) | first %}
+                <tr>
+                    <td>{{ city.city if city else 'Unknown' }}</td>
+                    <td>{{ temp.date }}</td>
+                    <td>{{ temp.temperature }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if top_precip %}
+    <h2 class="text-center mb-4">Top 5 Highest Precipitations</h2>
+    <table class="table table-bordered table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>City</th>
+                <th>Date</th>
+                <th>Precipitation (mm)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for precip in top_precip %}
+                {% set city = all_cities | selectattr('id', 'equalto', precip.city_id) | first %}
+                <tr>
+                    <td>{{ city.city if city else 'Unknown' }}</td>
+                    <td>{{ precip.date }}</td>
+                    <td>{{ precip.precipitation }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if top_wind_speeds %}
+    <h2 class="text-center mb-4">Top 5 Highest Wind Speeds</h2>
+    <table class="table table-bordered table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>City</th>
+                <th>Date</th>
+                <th>Wind Speed (m/s)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for wind in top_wind_speeds %}
+                {% set city = all_cities | selectattr('id', 'equalto', wind.city_id) | first %}
+                <tr>
+                    <td>{{ city.city if city else 'Unknown' }}</td>
+                    <td>{{ wind.date }}</td>
+                    <td>{{ wind.wind_speed }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+{% endblock %}
+
+

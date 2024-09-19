@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Locations{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Add City and Country</h1>
+    
+    <form action="/locations" method="POST" class="row g-3 justify-content-center">
+        <div class="col-md-4">
+            <label for="country" class="form-label">Country</label>
+            <input type="text" class="form-control" id="country" name="country" placeholder="Enter country" required>
+        </div>
+        
+        <div class="col-md-4">
+            <label for="city" class="form-label">City</label>
+            <input type="text" class="form-control" id="city" name="city" placeholder="Enter city" required>
+        </div>
+
+        <div class="col-md-4 text-center">
+            <button type="submit" class="btn btn-primary mt-4">Add City</button>
+        </div>
+    </form>
+
+    {% if cities %}
+    <h2 class="text-center mt-5">Selected Cities</h2>
+    <table class="table table-bordered mt-3">
+        <thead>
+            <tr>
+                <th>Country</th>
+                <th>City</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for city in cities %}
+            <tr>
+                <td>{{ city.country }}</td>
+                <td>{{ city.city }}</td>
+                <td>{{ city.latitude }}</td>
+                <td>{{ city.longitude }}</td>
+                <td>
+                    <form action="/locations" method="POST" style="display:inline;">
+                        <input type="hidden" name="remove_city" value="{{ city.city }}">
+                        <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if message %}
+    <div class="alert alert-warning mt-3">
+        {{ message }}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+
