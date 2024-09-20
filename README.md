@@ -1,4 +1,4 @@
-# Weather Forecast Web App # <img src="website/static/img/weatherlogo.png" alt="Weather App Logo" width="100" height="100">
+# Weather Forecast Web App  <img src="website/static/img/weatherlogo.png" alt="Weather App Logo" width="50" height="50">
 
 This project is a Flask-based web application that provides weather forecasts for various cities using data retrieved from the Meteomatics API.
 Users can add cities to get forecasts, view the latest data, and see weather trends. The app is containerized using Docker, making it easy to run locally.
