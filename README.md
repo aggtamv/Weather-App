@@ -45,10 +45,10 @@ To run this application locally, follow the steps below:
 ## Project Structure
 
 - `main.py`: The main entry point of the application.
-- auth.py: Handles user authentication and sessions.
-- __init__.py: Initializes the Flask app and registers routes.
-- static/: Contains static files such as CSS and JavaScript.
-- templates/: Holds HTML templates for rendering the frontend.
+- `auth.py`: Handles user authentication and sessions.
+- `__init__.p`y: Initializes the Flask app and registers routes.
+- `static/`: Contains static files such as CSS and JavaScript.
+- `templates/`: Holds HTML templates for rendering the frontend.
 
 ## API Keys
 
