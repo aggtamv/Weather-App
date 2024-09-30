@@ -15,15 +15,32 @@ from sqlalchemy import cast, Date
 auth = Blueprint('auth', __name__)
 
 def get_coordinates(city):
+    """Fetch the latitude and longitude of a city using the API."""
     api_url = f'https://api.api-ninjas.com/v1/geocoding?city={city}'
-    headers = {'X-Api-Key': 'CCoWazQWnXn7Uq9bW7nWZw==yeI9Z9WCgMxcmduf'}  # Replace with my API key
+    headers = {'X-Api-Key': 'CCoWazQWnXn7Uq9bW7nWZw==yeI9Z9WCgMxcmduf'}  # Replace with your actual API key
 
-    response = requests.get(api_url, headers=headers)
-    if response.status_code == requests.codes.ok:
+    try:
+        response = requests.get(api_url, headers=headers)
+        response.raise_for_status()  # Raises an error for bad responses (4xx, 5xx)
+
         data = response.json()
-        if data:
-            return data[0]['latitude'], data[0]['longitude']
-    return None, None
+        if not data:
+            print(f"Error: No data found for city '{city}'. Please check the city name.")
+            return None, None
+
+        return data[0]['latitude'], data[0]['longitude']
+
+    except RequestException as req_err:
+        print(f"Request error: {req_err}")
+        return None, None
+
+    except (KeyError, IndexError) as key_err:
+        print(f"Error parsing response data: {key_err}")
+        return None, None
+
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return None, None
 
 def capitalize_text(text):
     """Capitalize the first letter and make the rest lowercase."""
@@ -32,6 +49,12 @@ def capitalize_text(text):
 def add_city_data(cities):
     for city in cities:
         try:
+            # Get coordinates for the city
+            latitude, longitude = get_coordinates(city['city'])
+            if latitude is None or longitude is None:
+                print(f"Skipping '{city['city']}' due to invalid coordinates.")
+                continue
+            
             # Check if the city already exists
             existing_entry = Cities.query.filter_by(city=city['city']).first()
             if existing_entry is None:
@@ -39,8 +62,8 @@ def add_city_data(cities):
                 new_entry = Cities(
                     country=city['country'],
                     city=city['city'],
-                    longitude=city['longitude'],
-                    latitude=city['latitude']
+                    longitude=longitude,
+                    latitude=latitude
                 )
                 db.session.add(new_entry)
                 db.session.commit()
@@ -61,12 +84,18 @@ def add_city_data(cities):
 
 @auth.route('/locations', methods=['GET', 'POST'])
 def locations_info():
+    message = None  # Initialize message to None
+    
     if request.method == 'POST':
+        # Handle removing a city
         if 'remove_city' in request.form:
             city_to_remove = request.form.get('remove_city')
             cities = session.get('cities', [])
             cities = [city for city in cities if city['city'] != city_to_remove]
             session['cities'] = cities
+            message = f"City '{city_to_remove}' removed successfully."
+
+        # Handle adding a new city
         else:
             country = request.form.get('country')
             city = request.form.get('city')
@@ -84,16 +113,23 @@ def locations_info():
                 if len(cities) < 3:
                     cities.append(city_data)
                     session['cities'] = cities
+                    message = f"City '{city}' added successfully."
                 else:
                     message = "You can only select up to 3 cities."
                     return render_template('locations.html', message=message, cities=cities)
             else:
-                message = f"Could not retrieve coordinates for {city}"
+                message = f"Could not retrieve coordinates for {city}. Please provide a valid city name."
+                cities = session.get('cities', [])  # Ensure cities is defined in case of failure
                 return render_template('locations.html', message=message, cities=cities)
 
+    # Fetch cities from session
     cities = session.get('cities', [])
-    add_city_data(cities)
-    return render_template('locations.html', cities=cities)
+    
+    # Add city data to the database (only if the list is not empty)
+    if cities:
+        add_city_data(cities)
+    
+    return render_template('locations.html', message=message, cities=cities)
 
 @auth.route('/forecast', methods=['GET', 'POST'])
 def forecast_info():
